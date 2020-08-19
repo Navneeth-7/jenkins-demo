@@ -1,0 +1,99 @@
+Configure SSH on the Remote Agent:-
+
+Log into the master via SSH. From the master node, use SSH to log into the worker node.
+
+On the worker node, create the directory for the user's home:
+
+sudo mkdir /var/lib/jenkins
+Add the user, assigning the home directory:
+
+sudo useradd -d /var/lib/jenkins jenkins
+Make the user the owner of their home directory:
+
+sudo chown -R jenkins:jenkins /var/lib/jenkins
+Create an .ssh directory for the jenkins user:
+
+sudo mkdir /var/lib/jenkins/.ssh
+Run ssh-keygen. Hit Enter to accept defaults until it completes.
+
+Copy the contents of ~/.ssh/id_rsa.pub to the file /var/lib/jenkins/.ssh/authorized_keys
+
+cat ~/.ssh/id_rsa.pub # Copy the output
+
+sudo vi /var/lib/jenkins/.ssh/authorized_keys # Paste the output of cat and save
+Copy the contents of id_rsa, as this is the private key that we will paste into Jenkins.
+
+Exit the worker node.
+
+Create an .ssh directory on the master in the jenkins directory:
+
+sudo mkdir /var/lib/jenkins/.ssh
+Copy the known_hosts entry over from the /home/cloud_user/.ssh directory to the jenkins user's .ssh:
+
+sudo cp ~/.ssh/known_hosts /var/lib/jenkins/.ssh	
+
+	
+	
+	
+
+Set up the Node on the Jenkins Master:-	
+	
+Log into the Jenkins master web interface at port :8080 using these credentials: username: student password: OmgPassword!.
+
+In the Jenkins master, go to Manage Jenkins and select Manage Nodes and Clouds.
+
+On this page, add a node.
+
+Name the node worker1.
+
+On the Remote root directory line, type /var/lib/jenkins.
+
+Set the number of executors to 2.
+
+On the Host line enter the IP address of the worker
+
+On the Credentials line click Add.
+
+In the credentials configuration page, set the type to SSH Username with private key.
+
+Enter the username jenkins.
+
+Enter the contents of the id_rsa as the key.
+
+Set the description to jssh.
+
+Save.
+
+Select the credential you just created as the SSH credential.
+
+Save.
+
+Go to the worker node logs and ensure that the worker node is set up correctly.
+
+
+
+
+Test a Remote Build:- 
+
+Configure the master to use labels, to ensure default builds run on the remote:
+
+On the master node, on the left go to Manage Jenkins.
+Select Configure System.
+On the Labels line, enter master.
+Set Usage to Only build jobs with label expressions matching this node.
+Save.
+Create a Freestyle project.
+
+Create a build step that runs a shell command.
+
+Enter:
+
+hostname > location.txt
+Create a post build step that archives the *.txt files.
+
+Run the build.
+
+Check the log to ensure that the build ran on the remote agent.
+
+Check the artifact to ensure that it contains the hostname of the remote worker.
+	
