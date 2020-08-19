@@ -38,7 +38,7 @@ sudo cp ~/.ssh/known_hosts /var/lib/jenkins/.ssh
 
 Set up the Node on the Jenkins Master:-	
 	
-Log into the Jenkins master web interface at port :8080 using these credentials: username: student password: OmgPassword!.
+Log into the Jenkins master web interface at port :8080 using credentials:
 
 In the Jenkins master, go to Manage Jenkins and select Manage Nodes and Clouds.
 
