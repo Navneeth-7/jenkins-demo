@@ -1,0 +1,34 @@
+Jenkins UI :-
+	Once you access the Jenkins landing page, click New Item on the left side of the screen to proceed towards selecting the type of Jenkins job you want to create.
+
+	Once the new page loads, click on Pipeline and in the input box give a name to your job, such as MyDeclarativePipeline.
+
+	After selecting the type of job, Pipeline, and giving it a name, click on OK to proceed with configuring the job.
+Configuring a Jenkins Pipeline Job (Declarative Pipeline):
+	On the new page which loads for configuring the pipeline job, scroll down to the Pipeline section and ensure that Pipeline Script is selected in the Definition drop-down. An input area should be visible. Copy the following body of text (which is basically in Groovy DSL format, a format understood by Jenkins) into the input area:
+	pipeline {
+    agent {
+        docker { image 'linuxacademycontent/jenkins_pipelines' }
+    }
+    stages {
+        stage('fetch') {
+            steps {
+                sh 'git clone https://github.com/Navneeth-7/content-pipelines-cje-labs.git'
+            }
+        }
+        stage('build'){
+            steps{
+                sh 'gcc --std=c99 -o mario content-pipelines-cje-labs/lab1_lab2/mario.c'
+            }
+        }
+        stage('archive'){
+            steps{
+                archiveArtifacts artifacts: 'mario'
+            }
+        }
+    }
+}
+Leave everything else at the default settings and click on Save.
+
+Note: This Declarative Pipeline will pull down and run a Docker container which has git and gcc utilities installed for cloning and compiling the code.
+
