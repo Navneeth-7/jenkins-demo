@@ -1,0 +1,134 @@
+Jenkins UI (Verify That Jenkins Worker Nodes Are Integrated)
+	Once you access the landing page for Jenkins (http://:8080), click Manage Jenkins on the left side of the screen. In the new screen that loads, look for and click on Manage Nodes and Clouds. On this new page that loads you should see three systems:
+
+    master
+    JenkinsWorker1
+    JenkinsWorker2
+
+	Note that there should be no red x symbol on any of the systems on this page, indicating that connectivity is good between them and the Jenkins master.
+
+	master is the Jenkins instance hosting your Jenkins UI. JenkinsWorker1 has been assigned the label docker1. JenkinsWorker2 ha	s been assigned label docker2.
+
+	We'll be using these labels later in the tasks to assign jobs to these Jenkins agents.
+
+	We will be creating two separate pipelines which will work in unison to complete a task. Both of these pipelines will run on separate Jenkins workers/agent nodes, which already have been provisioned and integrated with the Jenkins master instance you're working on.
+
+	Before you start creating pipelines and using these workers in those pipelines, go ahead and verify their connectivity.
+	
+Configure Pipeline # 1
+	From the Manage Nodes and Clouds page, click Back to Dashboard on the left options pane. Once you're back on the dashboard, click on New item to create a new pipeline. Click on Pipeline, and in the input box give your first pipeline job name pipeline1. Make sure that you give it this name.
+
+	After selecting the type of job, Pipeline, and giving it a name, click on OK to proceed with configuring the job.
+
+	On the new page which loads for configuring the pipeline job, scroll down to the Pipeline section and ensure that Pipeline Script is selected in the Definition drop-down. An input area should be visible. Copy the following body of text (which is basically in Groovy DSL format, a format understood by Jenkins) into the input area:
+
+		pipeline{
+		agent {
+			docker {
+				image 'python:alpine'
+				args '-u root'
+				label 'docker1'
+			}
+		}
+		stages{
+			stage('prep'){
+				steps{
+					sh 'apk add git'
+				}
+			}
+			stage('fetch'){
+				steps{
+				sh 'git clone https://github.com/linuxacademy/content-pipelines-cje-labs.git'                
+				}
+			}
+			stage('add'){
+				steps{
+					sh 'pip install -r content-pipelines-cje-labs/lab3_lab4/dog_pics_downloader/requirements.txt'
+				}
+			}
+			stage('execute'){
+				steps{
+					sh 'python content-pipelines-cje-labs/lab3_lab4/dog_pics_downloader/dog_pic_get_class.py'
+				}
+			}
+		}
+		post{
+			always{
+				echo "execution complete"
+			}
+			success{
+				archiveArtifacts artifacts: '*.jpg'
+			}
+			cleanup{
+				sh 'rm -rf content-pipelines-cje-labs'
+			}
+		}
+		}
+
+	Leave everything else at default settings and click Save.
+
+	Note that in the agent block for the pipeline, we have instructed the container to be run on the JenkinsWorker1 worker/agent with label docker1.
+
+
+Configure Pipeline # 2
+	Once you've created the first pipeline, click on the Back to Dashboard button and head back to the New Item page for creating the second pipeline. Select Pipeline and give it an appropriate name, such as pipeline2.
+
+	On this pipeline's configuration page, go to the General section. Check and enable plugin Permission to Copy Artifact. This will show a new input form area where you'll enter the name of the pipeline from which you want to copy saved artifacts. In our case, the name of the other pipeline is pipeline1. Make sure to type the name of the pipeline out fully, or click on the drop-down autofill option.
+
+	Under the Build Triggers section, check and enable the Build after other projects are built option. This should provide more input options. Fill them out as follows:
+
+    For Projects to watch, type in pipeline1
+    Click on the radio button Trigger only if build is stable. This ensures that this second pipeline will trigger on the successful/stable build of pipeline1.
+
+	Under the Pipeline section ensure that Pipeline Script is selected as a Definition, and paste the following snippet into the input area:
+
+	pipeline{
+		agent {
+			docker{ image 'centos:7'
+					args '-u root'
+					label 'docker2'
+			}
+		}
+		
+		stages{
+			stage('dependencies'){
+				steps{
+					sh 'yum -y install python3 python3-pip zlib-devel gcc git'
+				}
+		}
+			stage('copyart'){
+				steps{
+					copyArtifacts(projectName: 'pipeline1', flatten: true)
+				}
+			}
+			stage('fetch'){
+				steps{
+					sh 'git clone https://github.com/linuxacademy/content-pipelines-cje-labs.git'
+				}
+			}
+			stage('install'){
+				steps{
+					sh 'pip3 install -r content-pipelines-cje-labs/lab3_lab4/image_watermarker/requirements.txt'
+				}
+			}
+			stage('exec'){
+				steps{
+					sh 'python3 content-pipelines-cje-labs/lab3_lab4/image_watermarker/watermark.py'
+				}
+			}
+		}
+		post{
+			success{
+				archiveArtifacts artifacts: '*watermarked.jpg'
+			}
+			cleanup{
+				sh 'rm -rf content-pipelines-cje-labs *.jpg'
+			}
+		}
+		}
+
+Leave everything else at the default settings and click on Save. Note that in the agent block for the pipeline, we have instructed the container to be run on the JenkinsWorker2 worker/agent with label docker2.
+
+
+
+
