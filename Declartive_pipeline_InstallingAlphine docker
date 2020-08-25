@@ -1,0 +1,58 @@
+Jenkins UI:-
+
+	Once you access landing page for Jenkins, click New Item on the left side of the screen to proceed towards selecting the type of Jenkins job you want to create.
+
+	Once the new page loads, click on Pipeline and on the input box give a name to your job, such as MyDeclarativePipeline.
+
+	After selecting the type of job, Pipeline, and giving it a name, click OK to proceed with configuring the job.
+
+
+Configuring the Jenkins Pipeline Job (Docker in Jenkins):-
+
+	On the new page which loads for configuring the pipeline job, scroll down to the Pipeline section and ensure that Pipeline script is selected in the Definition drop-down. An input area should be visible. This could also be done using a Scripted Pipeline, however we will be using a Declarative Pipeline in this lab. Copy the following body of text (which is basically in Groovy DSL format, a format understood by Jenkins) into the input area:
+	pipeline{
+    agent {
+        docker {
+            image 'python:alpine'
+            args '-u root'
+        }
+    }
+    stages{
+        stage('Prepare environment'){
+            steps{
+                sh 'apk add git'
+            }
+        }
+        stage('Clone code from Git repository and setup python env'){
+            steps{
+                sh 'git clone https://github.com/Navneeth-7/content-pipelines-cje-labs.git'
+                sh 'pip install -r content-pipelines-cje-labs/lab3_lab4/dog_pics_downloader/requirements.txt'
+            }
+        }
+        stage('test code'){
+            steps{
+                sh 'python content-pipelines-cje-labs/lab3_lab4/dog_pics_downloader/dog_pic_get_class.py'
+            }
+        }
+    }
+    post{
+        always{
+            echo "Job execution complete."
+        }
+        success{
+            archiveArtifacts artifacts : '*.jpg'
+        }
+        unsuccessful{
+            echo "Job execution status is failed, please check error logs"
+        }
+        cleanup{
+                echo 'Cleaning up environment'
+                sh 'rm -rf content-pipelines-cje-labs'
+        }
+    }
+}
+Leave everything else at the default settings and click on Save.
+
+Note: This Declarative Pipeline will pull down and run a Docker container which has python3 and pip installed already.
+
+Additionally, we are installing git inside the container to pull down the code we want to test.
