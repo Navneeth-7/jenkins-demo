@@ -1,4 +1,4 @@
-Jenkins UI :-
+ Jenkins UI :-
 	Once you access the Jenkins landing page, click New Item on the left side of the screen to proceed towards selecting the type of Jenkins job you want to create.
 
 	Once the new page loads, click on Pipeline and in the input box give a name to your job, such as MyDeclarativePipeline.
