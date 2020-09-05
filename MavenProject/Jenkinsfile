@@ -5,13 +5,7 @@
          maven 'Maven3.6'
     }
     stages {
-        stage('Clone') {
-            steps {
-                echo "checking out the repo"
-                git 'https://github.com/Navneeth-7/jenkins-demo.git'
-            
-            }
-        }
+        
         stage('build'){
             steps {
                 echo "building the project"
